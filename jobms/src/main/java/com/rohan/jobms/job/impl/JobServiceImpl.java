@@ -3,12 +3,14 @@ package com.rohan.jobms.job.impl;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collector;
+// import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+// import com.netflix.discovery.converters.Auto;
 import com.rohan.jobms.job.Job;
 import com.rohan.jobms.job.JobRepository;
 import com.rohan.jobms.job.JobService;
@@ -19,6 +21,9 @@ import com.rohan.jobms.job.external.Company;
 public class JobServiceImpl implements JobService {
 
     private final JobRepository jobRepository;
+
+    @Autowired
+    RestTemplate restTemplate;
 
     public JobServiceImpl(JobRepository jobRepository) {
         this.jobRepository = jobRepository;
@@ -37,10 +42,10 @@ public class JobServiceImpl implements JobService {
     private JobWithCompanyDTO convertToDto(Job job){
             JobWithCompanyDTO jobWithCompanyDTO = new JobWithCompanyDTO();
             jobWithCompanyDTO.setJob(job);
-            RestTemplate restTemplate = new RestTemplate();
+            // RestTemplate restTemplate = new RestTemplate();
             try {
                 Company company = restTemplate.getForObject(
-                    "http://localhost:8081/companies/" + job.getCompanyId(),
+                    "http://COMPANYMS:8081/companies/" + job.getCompanyId(),
                     Company.class
                 );
                 jobWithCompanyDTO.setCompany(company);
@@ -56,8 +61,9 @@ public class JobServiceImpl implements JobService {
     }
 
     @Override
-    public Job getJobById(Long id) {
-        return jobRepository.findById(id).orElse(null);
+    public JobWithCompanyDTO getJobById(Long id) {
+        Job job = jobRepository.findById(id).orElse(null);
+        return convertToDto(job);
     }
 
     @Override

@@ -18,6 +18,8 @@ import org.springframework.web.client.RestTemplate;
 import com.rohan.jobms.job.Job;
 import com.rohan.jobms.job.JobRepository;
 import com.rohan.jobms.job.JobService;
+import com.rohan.jobms.job.clients.CompanyClient;
+import com.rohan.jobms.job.clients.ReviewClient;
 import com.rohan.jobms.job.dto.JobDTO;
 import com.rohan.jobms.job.external.Company;
 import com.rohan.jobms.job.external.Review;
@@ -31,8 +33,14 @@ public class JobServiceImpl implements JobService {
     @Autowired
     RestTemplate restTemplate;
 
-    public JobServiceImpl(JobRepository jobRepository) {
+    private CompanyClient companyClient;
+    private ReviewClient reviewClient;
+
+    public JobServiceImpl(JobRepository jobRepository , 
+    CompanyClient companyClient , ReviewClient reviewClient) {
         this.jobRepository = jobRepository;
+        this.companyClient = companyClient;
+        this.reviewClient = reviewClient;
     }
 
     @Override
@@ -50,22 +58,24 @@ public class JobServiceImpl implements JobService {
             // jobWithCompanyDTO.setJob(job);
             // RestTemplate restTemplate = new RestTemplate();
             // try {
-                Company company = restTemplate.getForObject(
-                    "http://COMPANYMS:8081/companies/" + job.getCompanyId(),
-                    Company.class
-                );
-                ResponseEntity<List<Review>> reviewResponse = restTemplate.exchange(
-                "http://REVIEWSMS:8083/reviews?companyId=" + job.getCompanyId(),
-                HttpMethod.GET,
-                HttpEntity.EMPTY,
-                new ParameterizedTypeReference<List<Review>>() {}
-                );
+                // Company company = restTemplate.getForObject(
+                //     "http://COMPANYMS:8081/companies/" + job.getCompanyId(),
+                //     Company.class
+                // );
+                Company company = companyClient.getCompany(job.getCompanyId());
+                // ResponseEntity<List<Review>> reviewResponse = restTemplate.exchange(
+                // "http://REVIEWSMS:8083/reviews?companyId=" + job.getCompanyId(),
+                // HttpMethod.GET,
+                // HttpEntity.EMPTY,
+                // new ParameterizedTypeReference<List<Review>>() {}
+                // );
+                List<Review>reviews = reviewClient.getReviews(job.getCompanyId());
 ;
 
-                List<Review> review = reviewResponse.getBody();
+                // List<Review> review = reviewResponse.getBody();
 
                 JobDTO jobWithCompanyDTO = JobMapper.
-                mapToJobWithCompanyDto(job, company , review);
+                mapToJobWithCompanyDto(job, company , reviews);
                 // jobWithCompanyDTO.setCompany(company);
                 // jobWithCompanyDTO.setCompany(null); // Handle missing company gracefully
             // }
